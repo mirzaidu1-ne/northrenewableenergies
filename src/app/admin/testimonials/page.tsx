@@ -49,10 +49,8 @@ export default function AdminTestimonials() {
     }
 
     if (editing.id) {
-      // @ts-expect-error Supabase types not fully configured
       await supabase.from("testimonials").update(data).eq("id", editing.id)
     } else {
-      // @ts-expect-error Supabase types not fully configured
       await supabase.from("testimonials").insert([data])
     }
 
@@ -65,7 +63,6 @@ export default function AdminTestimonials() {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this testimonial?")) return
     const supabase = createClient() as any
-    // @ts-expect-error Supabase types not fully configured
     await supabase.from("testimonials").delete().eq("id", id)
     fetchTestimonials()
   }
