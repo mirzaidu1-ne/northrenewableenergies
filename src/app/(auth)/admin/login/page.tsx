@@ -1,14 +1,7 @@
-import { auth, signIn } from "@/auth"
-import { redirect } from "next/navigation"
+import { signIn } from "@/auth"
 import { Sun } from "lucide-react"
 
-export default async function LoginPage() {
-  const session = await auth()
-
-  if (session?.user) {
-    redirect("/admin")
-  }
-
+export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
       <div className="w-full max-w-md">
@@ -62,6 +55,12 @@ export default async function LoginPage() {
               Sign In
             </button>
           </form>
+        </div>
+
+        <div className="mt-6 text-center">
+          <a href="/admin" className="text-amber-400 hover:text-amber-300 text-sm">
+            Already logged in? Go to Dashboard &rarr;
+          </a>
         </div>
       </div>
     </div>

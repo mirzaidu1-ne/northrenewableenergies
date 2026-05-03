@@ -1,15 +1,31 @@
-import { auth, signOut } from "@/auth"
+import { signOut } from "@/auth"
 import AdminSidebar from "@/components/AdminSidebar"
+import { auth } from "@/auth"
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await auth()
+  let session
+  try {
+    session = await auth()
+  } catch {
+    session = null
+  }
 
   if (!session?.user) {
-    return <>{children}</>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Access Required</h2>
+          <p className="text-gray-500 mb-4">Please sign in to access the admin panel</p>
+          <a href="/admin/login" className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-full font-medium hover:bg-emerald-700 transition-all">
+            Go to Login
+          </a>
+        </div>
+      </div>
+    )
   }
 
   return (
