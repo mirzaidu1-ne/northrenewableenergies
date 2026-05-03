@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const supabase = await createClient()
+    const supabase = await createClient() as any
 
     const { error } = await supabase.from("leads").insert({
       name: body.name,
