@@ -1,6 +1,6 @@
 import NextAuth, { type DefaultSession } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 
 declare module "next-auth" {
   interface Session {
@@ -28,7 +28,10 @@ export const {
           return null
         }
 
-        const supabase = await createClient()
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
 
         const { data, error } = await supabase.auth.signInWithPassword({
           email: credentials.email as string,
@@ -68,4 +71,5 @@ export const {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
 })
