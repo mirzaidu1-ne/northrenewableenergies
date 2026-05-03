@@ -25,6 +25,7 @@ export const {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.error("NextAuth: Missing credentials")
           return null
         }
 
@@ -38,25 +39,33 @@ export const {
           password: credentials.password as string,
         })
 
-        if (error || !data.user) {
+        if (error) {
+          console.error("NextAuth Supabase error:", error.message)
+          return null
+        }
+
+        if (!data.user) {
           return null
         }
 
         return {
           id: data.user.id,
           email: data.user.email,
-          name: data.user.user_metadata?.name,
+          name: data.user.user_metadata?.name || data.user.email,
         }
       },
     }),
   ],
   pages: {
     signIn: "/admin/login",
+    error: "/admin/login",
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        token.email = user.email
+        token.name = user.name
       }
       return token
     },
@@ -70,6 +79,5 @@ export const {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
 })
