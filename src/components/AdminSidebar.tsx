@@ -24,14 +24,14 @@ const navItems = [
 
 export default function AdminSidebar() {
   return (
-    <aside className="admin-sidebar">
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white z-50 flex flex-col">
       <Link href="/admin" className="p-6 border-b border-white/10">
         <span className="text-xl font-bold">
-          North<span className="text-accent">Admin</span>
+          North<span className="text-amber-400">Admin</span>
         </span>
       </Link>
 
-      <nav className="flex-1 py-6 px-3">
+      <nav className="flex-1 py-6 px-3 overflow-y-auto">
         <ul className="space-y-1">
           {navItems.map((item) => (
             <li key={item.href}>
@@ -42,6 +42,15 @@ export default function AdminSidebar() {
           ))}
         </ul>
       </nav>
+
+      <div className="p-4 border-t border-white/10">
+        <Link href="/" className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+          View Website
+        </Link>
+      </div>
     </aside>
   )
 }
@@ -61,13 +70,13 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
         isActive
-          ? "bg-accent text-dark font-semibold"
+          ? "bg-amber-400 text-gray-900 font-semibold"
           : "text-white/60 hover:text-white hover:bg-white/10"
       }`}
     >
-      <Icon className="w-5 h-5" />
+      <Icon className="w-5 h-5 flex-shrink-0" />
       {children}
     </Link>
   )

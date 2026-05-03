@@ -16,17 +16,15 @@ export default async function AdminLayout({
     <div className="flex min-h-screen">
       <AdminSidebar />
       <div className="flex-1 ml-64">
-        <header className="bg-white border-b border-gray-200 px-8 py-4">
+        <header className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-40">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-dark">Dashboard</h1>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="font-medium text-dark">{session.user.name || "Admin"}</p>
-                <p className="text-sm text-muted">{session.user.email}</p>
+                <p className="font-medium text-gray-900">{session.user.name || "Admin"}</p>
+                <p className="text-sm text-gray-500">{session.user.email}</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold">
                 {(session.user.name || "A")[0]}
               </div>
               <form
@@ -35,7 +33,7 @@ export default async function AdminLayout({
                   await signOut({ redirectTo: "/admin/login" })
                 }}
               >
-                <button type="submit" className="text-sm text-muted hover:text-dark transition-colors">
+                <button type="submit" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
                   Sign Out
                 </button>
               </form>

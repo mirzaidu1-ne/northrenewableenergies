@@ -79,11 +79,3 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   border: none;
 }
-
-.admin-sidebar {
-  @apply fixed left-0 top-0 h-screen w-64 bg-dark text-white z-50 flex flex-col;
-}
-
-.admin-main {
-  @apply ml-64 min-h-screen bg-gray-50;
-}
