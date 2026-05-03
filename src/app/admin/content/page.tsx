@@ -30,7 +30,7 @@ export default function AdminContent() {
   }, [selectedPage])
 
   const fetchContents = async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data } = await supabase
       .from("page_content")
       .select("*")
@@ -51,7 +51,7 @@ export default function AdminContent() {
     if (!currentSection) return
     setSaving(true)
 
-    const supabase = createClient()
+    const supabase = await createClient()
     const existing = contents.find((c) => c.section === currentSection)
 
     if (existing) {

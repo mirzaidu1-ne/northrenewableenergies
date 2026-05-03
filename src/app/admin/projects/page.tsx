@@ -28,7 +28,7 @@ export default function AdminProjects() {
   }, [])
 
   const fetchProjects = async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data } = await supabase.from("projects").select("*").order("created_at", { ascending: false })
     if (data) setProjects(data)
     setLoading(false)
@@ -39,7 +39,7 @@ export default function AdminProjects() {
     if (!editing) return
     setSaving(true)
 
-    const supabase = createClient()
+    const supabase = await createClient()
 
     if (editing.id) {
       await supabase.from("projects").update(editing).eq("id", editing.id)
@@ -55,7 +55,7 @@ export default function AdminProjects() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this project?")) return
-    const supabase = createClient()
+    const supabase = await createClient()
     await supabase.from("projects").delete().eq("id", id)
     fetchProjects()
   }

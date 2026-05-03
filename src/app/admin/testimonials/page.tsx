@@ -27,7 +27,7 @@ export default function AdminTestimonials() {
   }, [])
 
   const fetchTestimonials = async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data } = await supabase.from("testimonials").select("*").order("created_at", { ascending: false })
     if (data) setTestimonials(data)
     setLoading(false)
@@ -38,7 +38,7 @@ export default function AdminTestimonials() {
     if (!editing) return
     setSaving(true)
 
-    const supabase = createClient()
+    const supabase = await createClient()
 
     if (editing.id) {
       await supabase.from("testimonials").update(editing).eq("id", editing.id)
@@ -54,7 +54,7 @@ export default function AdminTestimonials() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this testimonial?")) return
-    const supabase = createClient()
+    const supabase = await createClient()
     await supabase.from("testimonials").delete().eq("id", id)
     fetchTestimonials()
   }

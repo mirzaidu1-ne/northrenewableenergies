@@ -26,7 +26,7 @@ export default function AdminTeam() {
   }, [])
 
   const fetchMembers = async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data } = await supabase.from("team_members").select("*").order("order", { ascending: true })
     if (data) setMembers(data)
     setLoading(false)
@@ -37,7 +37,7 @@ export default function AdminTeam() {
     if (!editing) return
     setSaving(true)
 
-    const supabase = createClient()
+    const supabase = await createClient()
 
     if (editing.id) {
       await supabase.from("team_members").update(editing).eq("id", editing.id)
@@ -53,7 +53,7 @@ export default function AdminTeam() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this team member?")) return
-    const supabase = createClient()
+    const supabase = await createClient()
     await supabase.from("team_members").delete().eq("id", id)
     fetchMembers()
   }
@@ -89,7 +89,7 @@ export default function AdminTeam() {
     ) return
 
     const swapIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1
-    const supabase = createClient()
+    const supabase = await createClient()
 
     await supabase
       .from("team_members")
