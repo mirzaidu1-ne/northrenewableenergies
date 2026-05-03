@@ -29,9 +29,9 @@ export default function AdminBlog() {
   }, [])
 
   const fetchPosts = async () => {
-    const supabase = await createClient()
+    const supabase = createClient() as any
     const { data } = await supabase.from("blog_posts").select("*").order("created_at", { ascending: false })
-    if (data) setPosts(data)
+    if (data) setPosts(data as BlogPost[])
     setLoading(false)
   }
 
@@ -40,8 +40,17 @@ export default function AdminBlog() {
     if (!editing) return
     setSaving(true)
 
-    const supabase = await createClient()
-    const postData = { ...editing, slug: slugify(editing.title) }
+    const supabase = createClient() as any
+    const postData = {
+      title: editing.title,
+      slug: slugify(editing.title),
+      excerpt: editing.excerpt,
+      content: editing.content,
+      cover_image: editing.cover_image || null,
+      author: editing.author,
+      is_published: editing.is_published,
+      published_at: editing.is_published ? new Date().toISOString() : editing.published_at,
+    }
 
     if (editing.id) {
       await supabase.from("blog_posts").update(postData).eq("id", editing.id)
@@ -57,13 +66,13 @@ export default function AdminBlog() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this post?")) return
-    const supabase = await createClient()
+    const supabase = createClient() as any
     await supabase.from("blog_posts").delete().eq("id", id)
     fetchPosts()
   }
 
   const togglePublish = async (post: BlogPost) => {
-    const supabase = await createClient()
+    const supabase = createClient() as any
     await supabase
       .from("blog_posts")
       .update({

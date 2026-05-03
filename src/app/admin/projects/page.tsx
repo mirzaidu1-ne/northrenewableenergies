@@ -28,7 +28,7 @@ export default function AdminProjects() {
   }, [])
 
   const fetchProjects = async () => {
-    const supabase = await createClient()
+    const supabase = createClient() as any
     const { data } = await supabase.from("projects").select("*").order("created_at", { ascending: false })
     if (data) setProjects(data)
     setLoading(false)
@@ -39,12 +39,21 @@ export default function AdminProjects() {
     if (!editing) return
     setSaving(true)
 
-    const supabase = await createClient()
+    const supabase = createClient() as any
+    const data = {
+      title: editing.title,
+      description: editing.description,
+      image_url: editing.image_url || null,
+      category: editing.category,
+      location: editing.location || null,
+      capacity_kw: editing.capacity_kw,
+      is_featured: editing.is_featured,
+    }
 
     if (editing.id) {
-      await supabase.from("projects").update(editing).eq("id", editing.id)
+      await supabase.from("projects").update(data).eq("id", editing.id)
     } else {
-      await supabase.from("projects").insert([editing])
+      await supabase.from("projects").insert([data])
     }
 
     setSaving(false)
@@ -55,7 +64,7 @@ export default function AdminProjects() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this project?")) return
-    const supabase = await createClient()
+    const supabase = createClient() as any
     await supabase.from("projects").delete().eq("id", id)
     fetchProjects()
   }
@@ -115,42 +124,20 @@ export default function AdminProjects() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-dark mb-1">Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={editing.title}
-                  onChange={(e) => updateField("title", e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                />
+                <input type="text" required value={editing.title} onChange={(e) => updateField("title", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark mb-1">Description *</label>
-                <textarea
-                  required
-                  rows={3}
-                  value={editing.description}
-                  onChange={(e) => updateField("description", e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-none"
-                />
+                <textarea required rows={3} value={editing.description} onChange={(e) => updateField("description", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark mb-1">Image URL</label>
-                <input
-                  type="url"
-                  value={editing.image_url || ""}
-                  onChange={(e) => updateField("image_url", e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                  placeholder="https://..."
-                />
+                <input type="url" value={editing.image_url || ""} onChange={(e) => updateField("image_url", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" placeholder="https://..." />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1">Category</label>
-                  <select
-                    value={editing.category}
-                    onChange={(e) => updateField("category", e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                  >
+                  <select value={editing.category} onChange={(e) => updateField("category", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
                     <option value="Residential">Residential</option>
                     <option value="Commercial">Commercial</option>
                     <option value="Agricultural">Agricultural</option>
@@ -158,51 +145,27 @@ export default function AdminProjects() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1">Location</label>
-                  <input
-                    type="text"
-                    value={editing.location || ""}
-                    onChange={(e) => updateField("location", e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                  />
+                  <input type="text" value={editing.location || ""} onChange={(e) => updateField("location", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1">Capacity (kW)</label>
-                  <input
-                    type="number"
-                    value={editing.capacity_kw || ""}
-                    onChange={(e) => updateField("capacity_kw", Number(e.target.value))}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                  />
+                  <input type="number" value={editing.capacity_kw || ""} onChange={(e) => updateField("capacity_kw", Number(e.target.value))} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
                 </div>
                 <div className="flex items-end">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={editing.is_featured}
-                      onChange={(e) => updateField("is_featured", e.target.checked)}
-                      className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
+                    <input type="checkbox" checked={editing.is_featured} onChange={(e) => updateField("is_featured", e.target.checked)} className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary" />
                     <span className="text-sm text-dark">Featured</span>
                   </label>
                 </div>
               </div>
               {editing.image_url && (
                 <div className="relative rounded-xl overflow-hidden aspect-video">
-                  <Image
-                    src={editing.image_url}
-                    alt="Preview"
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={editing.image_url} alt="Preview" fill className="object-cover" />
                 </div>
               )}
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-full transition-all disabled:opacity-50"
-              >
+              <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-full transition-all disabled:opacity-50">
                 <Save className="w-5 h-5" />
                 {saving ? "Saving..." : "Save Project"}
               </button>
@@ -231,34 +194,20 @@ export default function AdminProjects() {
                     <p className="text-sm text-muted">{project.location}</p>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
-                      {project.category}
-                    </span>
+                    <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">{project.category}</span>
                   </td>
                   <td className="px-6 py-4 text-dark">{project.capacity_kw} kW</td>
                   <td className="px-6 py-4">
                     {project.is_featured ? (
-                      <span className="px-3 py-1 bg-accent/20 text-accent-dark rounded-full text-sm font-medium">
-                        Featured
-                      </span>
+                      <span className="px-3 py-1 bg-accent/20 text-accent-dark rounded-full text-sm font-medium">Featured</span>
                     ) : (
                       <span className="text-muted text-sm">Regular</span>
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => openEdit(project)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-all"
-                      >
-                        <Edit className="w-4 h-4 text-muted" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(project.id)}
-                        className="p-2 hover:bg-red-50 rounded-lg transition-all"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </button>
+                      <button onClick={() => openEdit(project)} className="p-2 hover:bg-gray-100 rounded-lg transition-all"><Edit className="w-4 h-4 text-muted" /></button>
+                      <button onClick={() => handleDelete(project.id)} className="p-2 hover:bg-red-50 rounded-lg transition-all"><Trash2 className="w-4 h-4 text-red-500" /></button>
                     </div>
                   </td>
                 </tr>
@@ -267,20 +216,8 @@ export default function AdminProjects() {
           </table>
         ) : (
           <div className="text-center py-12">
-            <Image
-              src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=100&h=100&fit=crop"
-              alt="No projects"
-              width={80}
-              height={80}
-              className="mx-auto mb-4 rounded-full opacity-50"
-            />
             <p className="text-muted mb-4">No projects yet</p>
-            <button
-              onClick={openNew}
-              className="text-primary font-medium hover:underline"
-            >
-              Add your first project
-            </button>
+            <button onClick={openNew} className="text-primary font-medium hover:underline">Add your first project</button>
           </div>
         )}
       </div>

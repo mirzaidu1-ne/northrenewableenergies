@@ -29,7 +29,7 @@ export default function QuotePage() {
     setLoading(true)
 
     try {
-      const supabase = createClient()
+      const supabase = createClient() as any
       const { error } = await supabase.from("leads").insert({
         name: formData.name,
         email: formData.email,

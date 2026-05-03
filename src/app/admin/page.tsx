@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { BarChart3, Image, Users, Mail, TrendingUp } from "lucide-react"
 
 export default async function AdminDashboard() {
-  const supabase = await createClient()
+  const supabase = await createClient() as any
 
   const [
     { count: projectCount },

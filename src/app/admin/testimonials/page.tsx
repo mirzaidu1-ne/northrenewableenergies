@@ -27,9 +27,9 @@ export default function AdminTestimonials() {
   }, [])
 
   const fetchTestimonials = async () => {
-    const supabase = await createClient()
+    const supabase = createClient() as any
     const { data } = await supabase.from("testimonials").select("*").order("created_at", { ascending: false })
-    if (data) setTestimonials(data)
+    if (data) setTestimonials(data as Testimonial[])
     setLoading(false)
   }
 
@@ -38,12 +38,22 @@ export default function AdminTestimonials() {
     if (!editing) return
     setSaving(true)
 
-    const supabase = await createClient()
+    const supabase = createClient() as any
+    const data = {
+      name: editing.name,
+      role: editing.role || null,
+      content: editing.content,
+      rating: editing.rating,
+      image_url: editing.image_url || null,
+      is_featured: editing.is_featured,
+    }
 
     if (editing.id) {
-      await supabase.from("testimonials").update(editing).eq("id", editing.id)
+      // @ts-expect-error Supabase types not fully configured
+      await supabase.from("testimonials").update(data).eq("id", editing.id)
     } else {
-      await supabase.from("testimonials").insert([editing])
+      // @ts-expect-error Supabase types not fully configured
+      await supabase.from("testimonials").insert([data])
     }
 
     setSaving(false)
@@ -54,7 +64,8 @@ export default function AdminTestimonials() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this testimonial?")) return
-    const supabase = await createClient()
+    const supabase = createClient() as any
+    // @ts-expect-error Supabase types not fully configured
     await supabase.from("testimonials").delete().eq("id", id)
     fetchTestimonials()
   }

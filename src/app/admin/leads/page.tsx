@@ -26,14 +26,14 @@ export default function AdminLeads() {
   }, [])
 
   const fetchLeads = async () => {
-    const supabase = await createClient()
+    const supabase = await createClient() as any
     const { data } = await supabase.from("leads").select("*").order("created_at", { ascending: false })
     if (data) setLeads(data)
     setLoading(false)
   }
 
   const updateStatus = async (id: string, status: string) => {
-    const supabase = await createClient()
+    const supabase = await createClient() as any
     await supabase.from("leads").update({ status }).eq("id", id)
     fetchLeads()
   }

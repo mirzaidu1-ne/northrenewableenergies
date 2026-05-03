@@ -22,7 +22,7 @@ export default function ContactPage() {
     setLoading(true)
 
     try {
-      const supabase = createClient()
+      const supabase = createClient() as any
       const { error } = await supabase
         .from("contact_messages")
         .insert({
