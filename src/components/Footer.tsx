@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Sun, Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram } from "lucide-react"
+import { Sun, Mail, Phone, MapPin, Globe } from "lucide-react"
 
 const footerLinks = {
   services: [
@@ -34,7 +34,7 @@ export default function Footer() {
               Leading the transition to clean energy with professional solar installations for homes and businesses.
             </p>
             <div className="flex gap-4">
-              {[Facebook, Twitter, Linkedin, Instagram].map((Icon, i) => (
+              {[Globe].map((Icon, i) => (
                 <a
                   key={i}
                   href="#"
