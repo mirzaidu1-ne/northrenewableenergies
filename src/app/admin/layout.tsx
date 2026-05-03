@@ -9,14 +9,7 @@ export default async function AdminLayout({
   const session = await auth()
 
   if (!session?.user) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <p className="text-muted mb-4">Please sign in to access the admin panel</p>
-        <a href="/admin/login" className="text-primary font-medium hover:underline">
-          Go to Login
-        </a>
-      </div>
-    )
+    return <>{children}</>
   }
 
   return (
