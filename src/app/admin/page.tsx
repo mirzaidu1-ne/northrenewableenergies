@@ -16,7 +16,7 @@ export default async function AdminDashboard() {
     supabase.from("contact_messages").select("*", { count: "exact", head: true }),
   ])
 
-  const { data: recentLeads } = await supabase
+  const { data: recentLeads }: { data: { id: string; name: string; email: string; status: string; created_at: string }[] | null } = await supabase
     .from("leads")
     .select("*")
     .order("created_at", { ascending: false })
