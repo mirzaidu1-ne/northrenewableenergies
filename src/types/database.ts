@@ -10,6 +10,8 @@ export type Database = {
           category: string
           location: string | null
           capacity_kw: number | null
+          panels_count: number | null
+          annual_savings: string | null
           completed_at: string | null
           is_featured: boolean
           created_at: string
@@ -23,6 +25,8 @@ export type Database = {
           category: string
           location?: string | null
           capacity_kw?: number | null
+          panels_count?: number | null
+          annual_savings?: string | null
           completed_at?: string | null
           is_featured?: boolean
           created_at?: string
@@ -36,6 +40,8 @@ export type Database = {
           category?: string
           location?: string | null
           capacity_kw?: number | null
+          panels_count?: number | null
+          annual_savings?: string | null
           completed_at?: string | null
           is_featured?: boolean
           created_at?: string
@@ -83,6 +89,8 @@ export type Database = {
           content: string
           cover_image: string | null
           author: string
+          read_time: string | null
+          category: string | null
           published_at: string | null
           is_published: boolean
           created_at: string
@@ -96,6 +104,8 @@ export type Database = {
           content: string
           cover_image?: string | null
           author: string
+          read_time?: string | null
+          category?: string | null
           published_at?: string | null
           is_published?: boolean
           created_at?: string
@@ -109,6 +119,8 @@ export type Database = {
           content?: string
           cover_image?: string | null
           author?: string
+          read_time?: string | null
+          category?: string | null
           published_at?: string | null
           is_published?: boolean
           created_at?: string
@@ -251,6 +263,44 @@ export type Database = {
           id?: string
           key?: string
           value?: Record<string, unknown>
+          updated_at?: string
+        }
+      }
+      services: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          icon: string
+          image_url: string | null
+          features: Record<string, unknown>[]
+          order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          icon?: string
+          image_url?: string | null
+          features?: Record<string, unknown>[]
+          order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          icon?: string
+          image_url?: string | null
+          features?: Record<string, unknown>[]
+          order?: number
+          is_active?: boolean
+          created_at?: string
           updated_at?: string
         }
       }

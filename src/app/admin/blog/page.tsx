@@ -13,9 +13,13 @@ type BlogPost = {
   content: string
   cover_image: string | null
   author: string
+  read_time: string | null
+  category: string | null
   published_at: string | null
   is_published: boolean
 }
+
+const categories = ["Guide", "Technology", "Finance", "Real Estate", "Maintenance", "Case Study", "News"]
 
 export default function AdminBlog() {
   const [posts, setPosts] = useState<BlogPost[]>([])
@@ -48,6 +52,8 @@ export default function AdminBlog() {
       content: editing.content,
       cover_image: editing.cover_image || null,
       author: editing.author,
+      read_time: editing.read_time || "5 min read",
+      category: editing.category || "Guide",
       is_published: editing.is_published,
       published_at: editing.is_published ? new Date().toISOString() : editing.published_at,
     }
@@ -56,6 +62,11 @@ export default function AdminBlog() {
       await supabase.from("blog_posts").update(postData).eq("id", editing.id)
     } else {
       await supabase.from("blog_posts").insert([postData])
+    }
+
+    try {
+      await fetch("/api/revalidate-settings")
+    } catch {
     }
 
     setSaving(false)
@@ -97,6 +108,8 @@ export default function AdminBlog() {
       content: "",
       cover_image: "",
       author: "North Renewable Energies",
+      read_time: "5 min read",
+      category: "Guide",
       published_at: null,
       is_published: false,
     })
@@ -119,10 +132,7 @@ export default function AdminBlog() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-bold text-dark">Blog Posts</h2>
-        <button
-          onClick={openNew}
-          className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-full transition-all"
-        >
+        <button onClick={openNew} className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-full transition-all">
           <Plus className="w-5 h-5" />
           New Post
         </button>
@@ -132,9 +142,7 @@ export default function AdminBlog() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-dark">
-                {editing.id ? "Edit Post" : "New Post"}
-              </h3>
+              <h3 className="text-xl font-bold text-dark">{editing.id ? "Edit Post" : "New Post"}</h3>
               <button onClick={() => { setShowForm(false); setEditing(null) }}>
                 <X className="w-6 h-6 text-muted" />
               </button>
@@ -143,72 +151,44 @@ export default function AdminBlog() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-dark mb-1">Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={editing.title}
-                  onChange={(e) => updateField("title", e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                />
-                {editing.slug && (
-                  <p className="text-sm text-muted mt-1">Slug: /blog/{editing.slug}</p>
-                )}
+                <input type="text" required value={editing.title} onChange={(e) => updateField("title", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+                {editing.slug && <p className="text-sm text-muted mt-1">Slug: /blog/{editing.slug}</p>}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-dark mb-1">Category</label>
+                  <select value={editing.category || "Guide"} onChange={(e) => updateField("category", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
+                    {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark mb-1">Read Time</label>
+                  <input type="text" value={editing.read_time || "5 min read"} onChange={(e) => updateField("read_time", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" placeholder="5 min read" />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark mb-1">Excerpt *</label>
-                <textarea
-                  required
-                  rows={2}
-                  value={editing.excerpt}
-                  onChange={(e) => updateField("excerpt", e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-none"
-                />
+                <textarea required rows={2} value={editing.excerpt} onChange={(e) => updateField("excerpt", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark mb-1">Content *</label>
-                <textarea
-                  required
-                  rows={8}
-                  value={editing.content}
-                  onChange={(e) => updateField("content", e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-none font-mono text-sm"
-                  placeholder="Write your post content here..."
-                />
+                <textarea required rows={8} value={editing.content} onChange={(e) => updateField("content", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-none font-mono text-sm" placeholder="Write your post content here..." />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1">Author</label>
-                  <input
-                    type="text"
-                    value={editing.author}
-                    onChange={(e) => updateField("author", e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                  />
+                  <input type="text" value={editing.author} onChange={(e) => updateField("author", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1">Cover Image URL</label>
-                  <input
-                    type="url"
-                    value={editing.cover_image || ""}
-                    onChange={(e) => updateField("cover_image", e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                  />
+                  <input type="url" value={editing.cover_image || ""} onChange={(e) => updateField("cover_image", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
                 </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={editing.is_published}
-                  onChange={(e) => updateField("is_published", e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
-                />
+                <input type="checkbox" checked={editing.is_published} onChange={(e) => updateField("is_published", e.target.checked)} className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary" />
                 <span className="text-sm text-dark">Publish immediately</span>
               </label>
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-full transition-all disabled:opacity-50"
-              >
+              <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-full transition-all disabled:opacity-50">
                 <Save className="w-5 h-5" />
                 {saving ? "Saving..." : "Save Post"}
               </button>
@@ -222,6 +202,7 @@ export default function AdminBlog() {
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left px-6 py-4 text-sm font-medium text-muted">Post</th>
+              <th className="text-left px-6 py-4 text-sm font-medium text-muted">Category</th>
               <th className="text-left px-6 py-4 text-sm font-medium text-muted">Author</th>
               <th className="text-left px-6 py-4 text-sm font-medium text-muted">Status</th>
               <th className="text-right px-6 py-4 text-sm font-medium text-muted">Actions</th>
@@ -234,39 +215,22 @@ export default function AdminBlog() {
                   <p className="font-medium text-dark">{post.title}</p>
                   <p className="text-sm text-muted line-clamp-1">{post.excerpt}</p>
                 </td>
+                <td className="px-6 py-4">
+                  <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">{post.category || "Guide"}</span>
+                </td>
                 <td className="px-6 py-4 text-dark">{post.author}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    post.is_published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${post.is_published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
                     {post.is_published ? "Published" : "Draft"}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => togglePublish(post)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-all"
-                      title={post.is_published ? "Unpublish" : "Publish"}
-                    >
-                      {post.is_published ? (
-                        <EyeOff className="w-4 h-4 text-muted" />
-                      ) : (
-                        <Eye className="w-4 h-4 text-primary" />
-                      )}
+                    <button onClick={() => togglePublish(post)} className="p-2 hover:bg-gray-100 rounded-lg" title={post.is_published ? "Unpublish" : "Publish"}>
+                      {post.is_published ? <EyeOff className="w-4 h-4 text-muted" /> : <Eye className="w-4 h-4 text-primary" />}
                     </button>
-                    <button
-                      onClick={() => openEdit(post)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-all"
-                    >
-                      <Edit className="w-4 h-4 text-muted" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(post.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg transition-all"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </button>
+                    <button onClick={() => openEdit(post)} className="p-2 hover:bg-gray-100 rounded-lg"><Edit className="w-4 h-4 text-muted" /></button>
+                    <button onClick={() => handleDelete(post.id)} className="p-2 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4 text-red-500" /></button>
                   </div>
                 </td>
               </tr>
@@ -276,9 +240,7 @@ export default function AdminBlog() {
         {posts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted mb-4">No blog posts yet</p>
-            <button onClick={openNew} className="text-primary font-medium hover:underline">
-              Create your first post
-            </button>
+            <button onClick={openNew} className="text-primary font-medium hover:underline">Create your first post</button>
           </div>
         )}
       </div>

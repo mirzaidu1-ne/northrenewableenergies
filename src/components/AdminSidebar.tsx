@@ -10,16 +10,19 @@ import {
   Users,
   Mail,
   BookOpen,
+  Sun,
+  Settings,
 } from "lucide-react"
 
 const navItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/admin/services", icon: Sun, label: "Services" },
   { href: "/admin/projects", icon: Image, label: "Projects" },
   { href: "/admin/testimonials", icon: MessageSquare, label: "Testimonials" },
   { href: "/admin/blog", icon: FileText, label: "Blog Posts" },
   { href: "/admin/leads", icon: Mail, label: "Leads & Quotes" },
   { href: "/admin/team", icon: Users, label: "Team Members" },
-  { href: "/admin/settings", icon: BookOpen, label: "Website Settings" },
+  { href: "/admin/settings", icon: Settings, label: "Website Settings" },
 ]
 
 export default function AdminSidebar() {

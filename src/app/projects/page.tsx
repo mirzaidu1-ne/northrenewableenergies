@@ -1,67 +1,50 @@
 import SiteShell from "@/components/SiteShell"
 import CTASection from "@/components/CTASection"
 import Image from "next/image"
+import { createClient } from "@/lib/supabase/server"
 
-const projects = [
-  {
-    title: "Modern Family Home",
-    category: "Residential",
-    location: "Austin, TX",
-    capacity: "8.5 kW",
-    panels: 24,
-    savings: "$1,800/year",
-    image: "https://images.unsplash.com/photo-1559302504-64aae6ca6b6d?w=800&q=80",
-  },
-  {
-    title: "Corporate Office Complex",
-    category: "Commercial",
-    location: "Dallas, TX",
-    capacity: "120 kW",
-    panels: 320,
-    savings: "$28,000/year",
-    image: "https://images.unsplash.com/photo-1497440001374-f6ed0a8bbe19?w=800&q=80",
-  },
-  {
-    title: "Ranch Solar Array",
-    category: "Agricultural",
-    location: "Fort Worth, TX",
-    capacity: "25 kW",
-    panels: 72,
-    savings: "$5,400/year",
-    image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
-  },
-  {
-    title: "Suburban Home System",
-    category: "Residential",
-    location: "Houston, TX",
-    capacity: "6.2 kW",
-    panels: 18,
-    savings: "$1,350/year",
-    image: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=800&q=80",
-  },
-  {
-    title: "Shopping Center Installation",
-    category: "Commercial",
-    location: "San Antonio, TX",
-    capacity: "85 kW",
-    panels: 228,
-    savings: "$19,500/year",
-    image: "https://images.unsplash.com/photo-1611365892117-00ac5ef43c90?w=800&q=80",
-  },
-  {
-    title: "Farm Off-Grid System",
-    category: "Agricultural",
-    location: "Waco, TX",
-    capacity: "15 kW",
-    panels: 42,
-    savings: "$3,200/year",
-    image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&q=80",
-  },
+type ProjectRow = {
+  id: string
+  title: string
+  description: string
+  image_url: string | null
+  category: string
+  location: string | null
+  capacity_kw: number | null
+  panels_count: number | null
+  annual_savings: string | null
+}
+
+const hardcodedProjects = [
+  { title: "Modern Family Home", category: "Residential", location: "Austin, TX", capacity: "8.5 kW", panels: 24, savings: "$1,800/year", image: "https://images.unsplash.com/photo-1559302504-64aae6ca6b6d?w=800&q=80" },
+  { title: "Corporate Office Complex", category: "Commercial", location: "Dallas, TX", capacity: "120 kW", panels: 320, savings: "$28,000/year", image: "https://images.unsplash.com/photo-1497440001374-f6ed0a8bbe19?w=800&q=80" },
+  { title: "Ranch Solar Array", category: "Agricultural", location: "Fort Worth, TX", capacity: "25 kW", panels: 72, savings: "$5,400/year", image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80" },
 ]
 
 const categories = ["All", "Residential", "Commercial", "Agricultural"]
 
-export default function ProjectsPage() {
+async function fetchProjects(): Promise<ProjectRow[]> {
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase.from("projects").select("*").order("created_at", { ascending: false })
+    return (data || []) as ProjectRow[]
+  } catch {
+    return []
+  }
+}
+
+export default async function ProjectsPage() {
+  const dbProjects = await fetchProjects()
+  const projects = dbProjects.length > 0 ? dbProjects.map((p) => ({
+    title: p.title,
+    category: p.category,
+    location: p.location || "",
+    capacity: p.capacity_kw ? `${p.capacity_kw} kW` : "",
+    panels: p.panels_count || 0,
+    savings: p.annual_savings || "",
+    image: p.image_url || "",
+  })) : hardcodedProjects
+
   return (
     <SiteShell>
       <main>
@@ -86,9 +69,7 @@ export default function ProjectsPage() {
                 <button
                   key={cat}
                   className={`px-6 py-2 rounded-full font-medium transition-all ${
-                    i === 0
-                      ? "bg-primary text-white"
-                      : "bg-white text-dark hover:bg-primary hover:text-white"
+                    i === 0 ? "bg-primary text-white" : "bg-white text-dark hover:bg-primary hover:text-white"
                   }`}
                 >
                   {cat}
@@ -98,21 +79,13 @@ export default function ProjectsPage() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {projects.map((project, i) => (
-                <div
-                  key={i}
-                  className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
-                >
+                <div key={i} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
                   <div className="relative aspect-[4/3] overflow-hidden">
-                    <Image
-                      src={project.image}
-                      alt={project.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
+                    {project.image && (
+                      <Image src={project.image} alt={project.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                    )}
                     <div className="absolute top-4 left-4">
-                      <span className="bg-accent text-dark text-xs font-semibold px-3 py-1 rounded-full">
-                        {project.category}
-                      </span>
+                      <span className="bg-accent text-dark text-xs font-semibold px-3 py-1 rounded-full">{project.category}</span>
                     </div>
                   </div>
                   <div className="p-6">

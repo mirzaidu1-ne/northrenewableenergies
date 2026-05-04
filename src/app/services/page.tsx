@@ -1,96 +1,93 @@
 import SiteShell from "@/components/SiteShell"
 import CTASection from "@/components/CTASection"
 import Image from "next/image"
-import { CheckCircle, Home, Building2, Battery, Zap, Wrench, Sun } from "lucide-react"
+import { CheckCircle } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
+import * as Icons from "lucide-react"
 
-const services = [
+type ServiceRow = {
+  id: string
+  title: string
+  description: string
+  icon: string
+  image_url: string | null
+  features: string[]
+  order: number
+  is_active: boolean
+}
+
+async function fetchServices(): Promise<ServiceRow[]> {
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase.from("services").select("*").eq("is_active", true).order("order", { ascending: true })
+    return (data || []) as ServiceRow[]
+  } catch {
+    return []
+  }
+}
+
+const hardcodedServices = [
   {
-    icon: Home,
+    icon: "Home",
     title: "Residential Solar",
     description: "Custom-designed solar panel systems for homes of all sizes. We handle everything from permits to installation, ensuring a seamless transition to clean energy.",
-    features: [
-      "Free home assessment",
-      "Custom system design",
-      "Premium tier-1 panels",
-      "25-year warranty",
-      "Financing options available",
-      "Net metering setup",
-    ],
-    image: "https://images.unsplash.com/photo-1559302504-6b6b6d?w=800&q=80",
+    features: ["Free home assessment", "Custom system design", "Premium tier-1 panels", "25-year warranty", "Financing options available", "Net metering setup"],
+    image: "https://images.unsplash.com/photo-1559302504-64aae6ca6b6d?w=800&q=80",
   },
   {
-    icon: Building2,
+    icon: "Building2",
     title: "Commercial Solar",
     description: "Large-scale solar installations for businesses, warehouses, and industrial facilities. Maximize your ROI with our commercial expertise.",
-    features: [
-      "ROI analysis & planning",
-      "Minimal business disruption",
-      "Scalable solutions",
-      "Tax incentive guidance",
-      "Performance monitoring",
-      "Maintenance packages",
-    ],
+    features: ["ROI analysis & planning", "Minimal business disruption", "Scalable solutions", "Tax incentive guidance", "Performance monitoring", "Maintenance packages"],
     image: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=800&q=80",
   },
   {
-    icon: Battery,
+    icon: "Battery",
     title: "Battery Storage",
     description: "Store excess solar energy for nighttime use or backup power during outages. Smart battery systems that integrate seamlessly with your solar array.",
-    features: [
-      "Tesla Powerwall certified",
-      "Backup power capability",
-      "Smart energy management",
-      "Grid independence options",
-      "Scalable capacity",
-      "Mobile app monitoring",
-    ],
+    features: ["Tesla Powerwall certified", "Backup power capability", "Smart energy management", "Grid independence options", "Scalable capacity", "Mobile app monitoring"],
     image: "https://images.unsplash.com/photo-1620714223084-8fcacc6259c1?w=800&q=80",
   },
   {
-    icon: Zap,
+    icon: "Zap",
     title: "EV Charging Stations",
     description: "Level 2 EV chargers powered by your solar system. Charge your electric vehicle with clean, free energy from the sun.",
-    features: [
-      "Level 2 fast charging",
-      "Solar-powered charging",
-      "Smart scheduling",
-      "Home & commercial options",
-      "All EV brands compatible",
-      "Professional installation",
-    ],
+    features: ["Level 2 fast charging", "Solar-powered charging", "Smart scheduling", "Home & commercial options", "All EV brands compatible", "Professional installation"],
     image: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&q=80",
   },
   {
-    icon: Wrench,
+    icon: "Wrench",
     title: "Maintenance & Repair",
     description: "Keep your solar system running at peak performance with our comprehensive maintenance and repair services.",
-    features: [
-      "Annual inspections",
-      "Panel cleaning",
-      "Inverter repair",
-      "System optimization",
-      "24/7 emergency service",
-      "Performance reports",
-    ],
+    features: ["Annual inspections", "Panel cleaning", "Inverter repair", "System optimization", "24/7 emergency service", "Performance reports"],
     image: "https://images.unsplash.com/photo-1624397640148-949b1732bb0a?w=800&q=80",
   },
   {
-    icon: Sun,
+    icon: "Sun",
     title: "Energy Consulting",
     description: "Expert guidance on energy efficiency, system sizing, and maximizing your solar investment from certified consultants.",
-    features: [
-      "Energy audit",
-      "System sizing analysis",
-      "Financial modeling",
-      "Incentive identification",
-      "ROI projections",
-      "Ongoing support",
-    ],
+    features: ["Energy audit", "System sizing analysis", "Financial modeling", "Incentive identification", "ROI projections", "Ongoing support"],
     image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&q=80",
   },
 ]
 
-export default function ServicesPage() {
+function getIcon(name: string) {
+  return (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[name] || Icons.Sun
+}
+
+export default async function ServicesPage() {
+  const dbServices = await fetchServices()
+  const services = dbServices.length > 0 ? dbServices : hardcodedServices.map((s, i) => ({
+    id: String(i),
+    title: s.title,
+    description: s.description,
+    icon: s.icon,
+    image_url: s.image,
+    features: s.features,
+    order: i,
+    is_active: true,
+  }))
+
   return (
     <SiteShell>
       <main>
@@ -108,45 +105,42 @@ export default function ServicesPage() {
           </div>
         </section>
 
-        {services.map((service, i) => (
-          <section key={i} className={`py-20 ${i % 2 === 0 ? "bg-white" : "bg-light"}`}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <div className={i % 2 === 1 ? "lg:order-2" : ""}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                      <service.icon className="w-6 h-6 text-primary" />
+        {(services as ServiceRow[]).map((service, i) => {
+          const Icon = getIcon(service.icon)
+          return (
+            <section key={service.id} className={`py-20 ${i % 2 === 0 ? "bg-white" : "bg-light"}`}>
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid lg:grid-cols-2 gap-12 items-center">
+                  <div className={i % 2 === 1 ? "lg:order-2" : ""}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                        <Icon className="w-6 h-6 text-primary" />
+                      </div>
+                      <h2 className="text-3xl font-bold text-dark">{service.title}</h2>
                     </div>
-                    <h2 className="text-3xl font-bold text-dark">{service.title}</h2>
+                    <p className="text-muted leading-relaxed mb-8">{service.description}</p>
+                    <ul className="space-y-3 mb-8">
+                      {(service.features || []).map((feature: string, j: number) => (
+                        <li key={j} className="flex items-center gap-3 text-dark">
+                          <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <a href="/quote" className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-full transition-all">
+                      Get Started
+                    </a>
                   </div>
-                  <p className="text-muted leading-relaxed mb-8">{service.description}</p>
-                  <ul className="space-y-3 mb-8">
-                    {service.features.map((feature, j) => (
-                      <li key={j} className="flex items-center gap-3 text-dark">
-                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <a
-                    href="/quote"
-                    className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-full transition-all"
-                  >
-                    Get Started
-                  </a>
-                </div>
-                <div className={`relative rounded-2xl overflow-hidden aspect-[4/3] ${i % 2 === 1 ? "lg:order-1" : ""}`}>
-                  <Image
-                    src={service.image}
-                    alt={service.title}
-                    fill
-                    className="object-cover"
-                  />
+                  {service.image_url && (
+                    <div className={`relative rounded-2xl overflow-hidden aspect-[4/3] ${i % 2 === 1 ? "lg:order-1" : ""}`}>
+                      <Image src={service.image_url} alt={service.title} fill className="object-cover" />
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          </section>
-        ))}
+            </section>
+          )
+        })}
 
         <CTASection />
       </main>
