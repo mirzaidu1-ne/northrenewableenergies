@@ -19,7 +19,7 @@ const navItems = [
   { href: "/admin/blog", icon: FileText, label: "Blog Posts" },
   { href: "/admin/leads", icon: Mail, label: "Leads & Quotes" },
   { href: "/admin/team", icon: Users, label: "Team Members" },
-  { href: "/admin/content", icon: BookOpen, label: "Page Content" },
+  { href: "/admin/settings", icon: BookOpen, label: "Website Settings" },
 ]
 
 export default function AdminSidebar() {
