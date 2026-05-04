@@ -4,7 +4,15 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Menu, X, Sun } from "lucide-react"
 
-const navLinks = [
+type NavLink = { href: string; label: string }
+
+interface HeaderProps {
+  logoText?: string
+  logoAccent?: string
+  navLinks?: NavLink[]
+}
+
+const defaultNavLinks: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/services", label: "Services" },
@@ -13,7 +21,11 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ]
 
-export default function Header() {
+export default function Header({
+  logoText = "North",
+  logoAccent = "Renewable",
+  navLinks = defaultNavLinks,
+}: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -34,7 +46,7 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-2">
             <Sun className="w-8 h-8 text-accent" />
             <span className="text-xl font-bold text-white">
-              North<span className="text-accent">Renewable</span>
+              {logoText}<span className="text-accent">{logoAccent}</span>
             </span>
           </Link>
 

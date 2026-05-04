@@ -1,22 +1,8 @@
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
-import HeroSlideshow from "@/components/HeroSlideshow"
-import AnimatedCounters from "@/components/AnimatedCounters"
-import ServicesSection from "@/components/ServicesSection"
-import ProjectsSection from "@/components/ProjectsSection"
-import TestimonialsSection from "@/components/TestimonialsSection"
-import SolarCalculator from "@/components/SolarCalculator"
-import CTASection from "@/components/CTASection"
 import { createClient } from "@/lib/supabase/server"
 
 type SiteSettings = {
-  hero_slides: Array<{
-    image: string
-    title: string
-    subtitle: string
-    ctaText?: string
-    ctaLink?: string
-  }>
   site_info: {
     siteName?: string
     tagline?: string
@@ -29,18 +15,6 @@ type SiteSettings = {
     email?: string
   }
   social_links: Record<string, string>
-  calculator_settings: {
-    currency: string
-    defaultBill: number
-    defaultRoofSize: number
-    costPerKw: number
-    savingsRate: number
-    co2Factor: number
-  }
-  stats: Array<{
-    value: string
-    label: string
-  }>
   footer_links: {
     services: Array<{ href: string; label: string }>
     company: Array<{ href: string; label: string }>
@@ -51,7 +25,6 @@ async function fetchSettings(): Promise<Partial<SiteSettings>> {
   try {
     const supabase = await createClient()
     const { data } = await supabase.from("site_settings").select("key, value")
-
     if (!data) return {}
 
     const settings: Partial<SiteSettings> = {}
@@ -64,16 +37,17 @@ async function fetchSettings(): Promise<Partial<SiteSettings>> {
   }
 }
 
-export default async function Home() {
+type SiteShellProps = {
+  children: React.ReactNode
+}
+
+export default async function SiteShell({ children }: SiteShellProps) {
   const settings = await fetchSettings()
 
   const siteInfo = settings.site_info || {}
-  const heroSlides = settings.hero_slides || []
-  const stats = settings.stats || []
-  const calculatorSettings = settings.calculator_settings
-  const footerLinks = settings.footer_links
   const contactInfo = settings.contact_info || {}
   const socialLinks = settings.social_links || {}
+  const footerLinks = settings.footer_links
 
   return (
     <>
@@ -81,20 +55,7 @@ export default async function Home() {
         logoText={siteInfo.logoText || "North"}
         logoAccent={siteInfo.logoAccent || "Renewable"}
       />
-      <main>
-        <HeroSlideshow
-          slides={heroSlides}
-          companyName={siteInfo.siteName || "North Renewable Energies"}
-        />
-        <AnimatedCounters
-          stats={stats.map((s) => ({ value: s.value, label: s.label }))}
-        />
-        <ServicesSection />
-        <ProjectsSection />
-        <SolarCalculator settings={calculatorSettings} />
-        <TestimonialsSection />
-        <CTASection />
-      </main>
+      {children}
       <Footer
         siteName={siteInfo.siteName || "North Renewable Energies"}
         logoText={siteInfo.logoText || "North"}

@@ -1,5 +1,4 @@
-import Header from "@/components/Header"
-import Footer from "@/components/Footer"
+import SiteShell from "@/components/SiteShell"
 import CTASection from "@/components/CTASection"
 import Image from "next/image"
 import { CheckCircle, Home, Building2, Battery, Zap, Wrench, Sun } from "lucide-react"
@@ -17,7 +16,7 @@ const services = [
       "Financing options available",
       "Net metering setup",
     ],
-    image: "https://images.unsplash.com/photo-1559302504-64aae6ca6b6d?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1559302504-6b6b6d?w=800&q=80",
   },
   {
     icon: Building2,
@@ -93,8 +92,7 @@ const services = [
 
 export default function ServicesPage() {
   return (
-    <>
-      <Header />
+    <SiteShell>
       <main>
         <section className="pt-32 pb-20 bg-gradient-to-br from-dark to-solar-blue">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -113,7 +111,7 @@ export default function ServicesPage() {
         {services.map((service, i) => (
           <section key={i} className={`py-20 ${i % 2 === 0 ? "bg-white" : "bg-light"}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className={`grid lg:grid-cols-2 gap-12 items-center ${i % 2 === 1 ? "lg:flex-row-reverse" : ""}`}>
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
                 <div className={i % 2 === 1 ? "lg:order-2" : ""}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -152,7 +150,6 @@ export default function ServicesPage() {
 
         <CTASection />
       </main>
-      <Footer />
-    </>
+    </SiteShell>
   )
 }

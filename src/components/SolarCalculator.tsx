@@ -3,16 +3,40 @@
 import { useState } from "react"
 import { Sun, Battery, DollarSign, ArrowRight } from "lucide-react"
 
-export default function SolarCalculator() {
-  const [monthlyBill, setMonthlyBill] = useState(200)
-  const [roofSize, setRoofSize] = useState(500)
+type CalculatorSettings = {
+  currency: string
+  defaultBill: number
+  defaultRoofSize: number
+  costPerKw: number
+  savingsRate: number
+  co2Factor: number
+}
+
+interface SolarCalculatorProps {
+  settings?: CalculatorSettings
+}
+
+const defaultSettings: CalculatorSettings = {
+  currency: "$",
+  defaultBill: 200,
+  defaultRoofSize: 500,
+  costPerKw: 2500,
+  savingsRate: 0.7,
+  co2Factor: 1.5,
+}
+
+export default function SolarCalculator({ settings }: SolarCalculatorProps) {
+  const config = settings || defaultSettings
+  const [monthlyBill, setMonthlyBill] = useState(config.defaultBill)
+  const [roofSize, setRoofSize] = useState(config.defaultRoofSize)
   const [state] = useState("TX")
 
   const estimatedSystemSize = Math.round((monthlyBill * 12) / 1500 * 10) / 10
   const estimatedPanels = Math.round(estimatedSystemSize * 3)
-  const annualSavings = Math.round(monthlyBill * 12 * 0.7)
+  const annualSavings = Math.round(monthlyBill * 12 * config.savingsRate)
   const twentyYearSavings = annualSavings * 20
-  const co2Offset = Math.round(estimatedSystemSize * 1.5 * 10) / 10
+  const co2Offset = Math.round(estimatedSystemSize * config.co2Factor * 10) / 10
+  const estimatedCost = Math.round(estimatedSystemSize * config.costPerKw)
 
   return (
     <section className="py-24 bg-gradient-to-br from-solar-blue to-dark">
@@ -31,7 +55,7 @@ export default function SolarCalculator() {
               <div>
                 <div className="flex justify-between mb-2">
                   <label className="text-white font-medium">Monthly Electricity Bill</label>
-                  <span className="text-accent font-bold">${monthlyBill}</span>
+                  <span className="text-accent font-bold">{config.currency}{monthlyBill}</span>
                 </div>
                 <input
                   type="range"
@@ -43,8 +67,8 @@ export default function SolarCalculator() {
                   className="w-full h-2 bg-white/20 rounded-full appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between text-white/40 text-sm mt-1">
-                  <span>$50</span>
-                  <span>$800</span>
+                  <span>{config.currency}50</span>
+                  <span>{config.currency}800</span>
                 </div>
               </div>
 
@@ -89,6 +113,9 @@ export default function SolarCalculator() {
               <p className="text-white/60">
                 Approximately <span className="text-white font-semibold">{estimatedPanels} panels</span> needed
               </p>
+              <p className="text-white/40 text-sm mt-1">
+                Estimated cost: {config.currency}{estimatedCost.toLocaleString()}
+              </p>
             </div>
 
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
@@ -98,11 +125,11 @@ export default function SolarCalculator() {
                 </div>
                 <div>
                   <p className="text-white/60 text-sm">Estimated Annual Savings</p>
-                  <p className="text-2xl font-bold text-white">${annualSavings.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-white">{config.currency}{annualSavings.toLocaleString()}</p>
                 </div>
               </div>
               <p className="text-white/60">
-                20-year savings: <span className="text-accent font-semibold">${twentyYearSavings.toLocaleString()}</span>
+                20-year savings: <span className="text-accent font-semibold">{config.currency}{twentyYearSavings.toLocaleString()}</span>
               </p>
             </div>
 

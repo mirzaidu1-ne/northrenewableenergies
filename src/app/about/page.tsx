@@ -1,5 +1,4 @@
-import Header from "@/components/Header"
-import Footer from "@/components/Footer"
+import SiteShell from "@/components/SiteShell"
 import CTASection from "@/components/CTASection"
 import { createClient } from "@/lib/supabase/server"
 import Image from "next/image"
@@ -23,8 +22,7 @@ export default async function AboutPage() {
   const team = teamMembers || []
 
   return (
-    <>
-      <Header />
+    <SiteShell>
       <main>
         <section className="pt-32 pb-20 bg-gradient-to-br from-gray-900 to-blue-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -89,7 +87,7 @@ export default async function AboutPage() {
                 </p>
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {team.map((member) => (
+                {team.map((member: { id: string; name: string; role: string; image_url?: string; bio?: string }) => (
                   <div key={member.id} className="group">
                     <div className="relative rounded-2xl overflow-hidden aspect-square mb-4">
                       {member.image_url ? (
@@ -117,7 +115,6 @@ export default async function AboutPage() {
 
         <CTASection />
       </main>
-      <Footer />
-    </>
+    </SiteShell>
   )
 }

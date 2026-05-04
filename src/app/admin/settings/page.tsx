@@ -133,7 +133,7 @@ export default function AdminSettings() {
                 <div className="flex items-center justify-between mb-3">
                   <button onClick={() => toggleHeroSlide(index)} className="flex items-center gap-2 font-medium text-gray-700">
                     {heroExpanded[index] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    Slide {index + 1}: {slide.title || "Untitled"}
+                    Slide {index + 1}: {(slide.title as string) || "Untitled"}
                   </button>
                   <button onClick={() => removeHeroSlide(index)} className="p-2 hover:bg-red-50 rounded-lg text-red-500">
                     <Trash2 className="w-4 h-4" />

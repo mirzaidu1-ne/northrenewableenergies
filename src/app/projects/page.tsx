@@ -1,5 +1,4 @@
-import Header from "@/components/Header"
-import Footer from "@/components/Footer"
+import SiteShell from "@/components/SiteShell"
 import CTASection from "@/components/CTASection"
 import Image from "next/image"
 
@@ -64,8 +63,7 @@ const categories = ["All", "Residential", "Commercial", "Agricultural"]
 
 export default function ProjectsPage() {
   return (
-    <>
-      <Header />
+    <SiteShell>
       <main>
         <section className="pt-32 pb-20 bg-gradient-to-br from-dark to-solar-blue">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -143,7 +141,6 @@ export default function ProjectsPage() {
 
         <CTASection />
       </main>
-      <Footer />
-    </>
+    </SiteShell>
   )
 }

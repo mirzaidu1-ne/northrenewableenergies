@@ -1,5 +1,4 @@
-import Header from "@/components/Header"
-import Footer from "@/components/Footer"
+import SiteShell from "@/components/SiteShell"
 import Image from "next/image"
 import Link from "next/link"
 import { Calendar, Clock, ArrowRight } from "lucide-react"
@@ -63,8 +62,7 @@ const posts = [
 
 export default function BlogPage() {
   return (
-    <>
-      <Header />
+    <SiteShell>
       <main>
         <section className="pt-32 pb-20 bg-gradient-to-br from-dark to-solar-blue">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -133,7 +131,6 @@ export default function BlogPage() {
           </div>
         </section>
       </main>
-      <Footer />
-    </>
+    </SiteShell>
   )
 }
