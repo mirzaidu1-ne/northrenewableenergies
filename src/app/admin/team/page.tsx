@@ -42,7 +42,13 @@ export default function AdminTeam() {
     if (editing.id) {
       await supabase.from("team_members").update(editing).eq("id", editing.id)
     } else {
-      await supabase.from("team_members").insert([editing])
+      await supabase.from("team_members").insert([{
+        name: editing.name,
+        role: editing.role,
+        bio: editing.bio || null,
+        image_url: editing.image_url || null,
+        order: editing.order,
+      }])
     }
 
     setSaving(false)
