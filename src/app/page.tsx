@@ -37,10 +37,7 @@ type SiteSettings = {
     savingsRate: number
     co2Factor: number
   }
-  stats: Array<{
-    value: string
-    label: string
-  }>
+  stats: Record<string, string> | Array<{ value: string; label: string }>
   footer_links: {
     services: Array<{ href: string; label: string }>
     company: Array<{ href: string; label: string }>
@@ -69,7 +66,13 @@ export default async function Home() {
 
   const siteInfo = settings.site_info || {}
   const heroSlides = settings.hero_slides || []
-  const stats = settings.stats || []
+  const statsRaw = settings.stats || {}
+  const statsArray = Array.isArray(statsRaw)
+    ? statsRaw
+    : Object.entries(statsRaw as Record<string, string>).map(([label, value]) => ({
+        value,
+        label: label.charAt(0).toUpperCase() + label.slice(1),
+      }))
   const calculatorSettings = settings.calculator_settings
   const footerLinks = settings.footer_links
   const contactInfo = settings.contact_info || {}
@@ -87,7 +90,7 @@ export default async function Home() {
           companyName={siteInfo.siteName || "North Renewable Energies"}
         />
         <AnimatedCounters
-          stats={stats.map((s) => ({ value: s.value, label: s.label }))}
+          stats={statsArray.map((s) => ({ value: s.value, label: s.label }))}
         />
         <ServicesSection />
         <ProjectsSection />

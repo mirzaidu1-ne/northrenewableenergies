@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Save, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react"
+import { Save, Plus, Trash2, ChevronDown, ChevronUp, ExternalLink } from "lucide-react"
 import Image from "next/image"
 
 type SettingsKey =
@@ -13,6 +13,7 @@ type SettingsKey =
   | "calculator_settings"
   | "stats"
   | "footer_links"
+  | "about_content"
 
 type Section = {
   key: SettingsKey
@@ -28,6 +29,7 @@ const sections: Section[] = [
   { key: "calculator_settings", label: "Calculator", icon: "🧮" },
   { key: "stats", label: "Stats Counters", icon: "📊" },
   { key: "footer_links", label: "Footer Links", icon: "🔻" },
+  { key: "about_content", label: "About Page", icon: "📝" },
 ]
 
 const defaultValues: Record<SettingsKey, unknown> = {
@@ -40,7 +42,10 @@ const defaultValues: Record<SettingsKey, unknown> = {
   calculator_settings: { currency: "$", defaultBill: 200, defaultRoofSize: 500, costPerKw: 2500, savingsRate: 0.7, co2Factor: 1.5 },
   stats: { installations: "", capacity: "", satisfaction: "", experience: "" },
   footer_links: { services: [], company: [] },
+  about_content: { heroTitle: "", heroDescription: "", storyTitle: "", storyParagraphs: [], values: [] },
 }
+
+type FooterLinkItem = { label: string; href: string }
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<Record<string, unknown>>({})
@@ -49,6 +54,7 @@ export default function AdminSettings() {
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(true)
   const [heroExpanded, setHeroExpanded] = useState<Record<number, boolean>>({})
+  const [footerExpanded, setFooterExpanded] = useState<Record<string, boolean>>({ services: true })
 
   useEffect(() => {
     fetchSettings()
@@ -62,7 +68,14 @@ export default function AdminSettings() {
       data.forEach((row: { key: string; value: unknown }) => {
         map[row.key] = row.value
       })
+      for (const key of Object.keys(defaultValues)) {
+        if (!map[key]) {
+          map[key] = defaultValues[key as SettingsKey]
+        }
+      }
       setSettings(map)
+    } else {
+      setSettings({ ...defaultValues })
     }
     setLoading(false)
   }
@@ -72,12 +85,17 @@ export default function AdminSettings() {
     const supabase = createClient() as any
 
     for (const [key, value] of Object.entries(settings)) {
-      const existing = await supabase.from("site_settings").select("id").eq("key", key).single()
-      if (existing.data) {
+      const { data: existing } = await supabase.from("site_settings").select("id").eq("key", key).single()
+      if (existing) {
         await supabase.from("site_settings").update({ value }).eq("key", key)
       } else {
         await supabase.from("site_settings").insert({ key, value })
       }
+    }
+
+    try {
+      await fetch("/api/revalidate-settings")
+    } catch {
     }
 
     setSaving(false)
@@ -90,13 +108,14 @@ export default function AdminSettings() {
   }
 
   const updateField = (key: SettingsKey, field: string, value: string | number) => {
-    const current = settings[key] as Record<string, unknown> || {}
+    const current = (settings[key] as Record<string, unknown>) || {}
     setSettings({ ...settings, [key]: { ...current, [field]: value } })
   }
 
   const addHeroSlide = () => {
     const slides = (settings.hero_slides as Array<Record<string, unknown>>) || []
     updateSetting("hero_slides", [...slides, { image: "", title: "", subtitle: "", ctaText: "Get Free Quote", ctaLink: "/quote" }])
+    setHeroExpanded({ ...heroExpanded, [slides.length]: true })
   }
 
   const removeHeroSlide = (index: number) => {
@@ -107,11 +126,79 @@ export default function AdminSettings() {
   const updateHeroSlide = (index: number, field: string, value: string) => {
     const slides = (settings.hero_slides as Array<Record<string, unknown>>) || []
     slides[index] = { ...slides[index], [field]: value }
-    updateSetting("hero_slides", slides)
+    updateSetting("hero_slides", [...slides])
   }
 
   const toggleHeroSlide = (index: number) => {
     setHeroExpanded({ ...heroExpanded, [index]: !heroExpanded[index] })
+  }
+
+  const addFooterLink = (group: "services" | "company") => {
+    const links = (settings.footer_links as { services: FooterLinkItem[]; company: FooterLinkItem[] }) || { services: [], company: [] }
+    const updated = { ...links, [group]: [...(links[group] || []), { label: "", href: "/" }] }
+    updateSetting("footer_links", updated)
+  }
+
+  const removeFooterLink = (group: "services" | "company", index: number) => {
+    const links = (settings.footer_links as { services: FooterLinkItem[]; company: FooterLinkItem[] }) || { services: [], company: [] }
+    const updated = { ...links, [group]: (links[group] || []).filter((_, i) => i !== index) }
+    updateSetting("footer_links", updated)
+  }
+
+  const updateFooterLink = (group: "services" | "company", index: number, field: "label" | "href", value: string) => {
+    const links = (settings.footer_links as { services: FooterLinkItem[]; company: FooterLinkItem[] }) || { services: [], company: [] }
+    const groupLinks = [...(links[group] || [])]
+    groupLinks[index] = { ...groupLinks[index], [field]: value }
+    const updated = { ...links, [group]: groupLinks }
+    updateSetting("footer_links", updated)
+  }
+
+  const toggleFooterGroup = (group: string) => {
+    setFooterExpanded({ ...footerExpanded, [group]: !footerExpanded[group] })
+  }
+
+  const addValue = () => {
+    const about = (settings.about_content as Record<string, unknown>) || {}
+    const values = (about.values as Array<{ icon: string; title: string; description: string }>) || []
+    const updated = { ...about, values: [...values, { icon: "Shield", title: "", description: "" }] }
+    updateSetting("about_content", updated)
+  }
+
+  const removeValue = (index: number) => {
+    const about = (settings.about_content as Record<string, unknown>) || {}
+    const values = (about.values as Array<unknown>) || []
+    const updated = { ...about, values: values.filter((_, i) => i !== index) }
+    updateSetting("about_content", updated)
+  }
+
+  const updateValue = (index: number, field: string, value: string) => {
+    const about = (settings.about_content as Record<string, unknown>) || {}
+    const values = [...((about.values as Array<Record<string, unknown>>) || [])]
+    values[index] = { ...values[index], [field]: value }
+    const updated = { ...about, values }
+    updateSetting("about_content", updated)
+  }
+
+  const addStoryParagraph = () => {
+    const about = (settings.about_content as Record<string, unknown>) || {}
+    const paragraphs = (about.storyParagraphs as string[]) || []
+    const updated = { ...about, storyParagraphs: [...paragraphs, ""] }
+    updateSetting("about_content", updated)
+  }
+
+  const updateStoryParagraph = (index: number, value: string) => {
+    const about = (settings.about_content as Record<string, unknown>) || {}
+    const paragraphs = [...((about.storyParagraphs as string[]) || [])]
+    paragraphs[index] = value
+    const updated = { ...about, storyParagraphs: paragraphs }
+    updateSetting("about_content", updated)
+  }
+
+  const removeStoryParagraph = (index: number) => {
+    const about = (settings.about_content as Record<string, unknown>) || {}
+    const paragraphs = ((about.storyParagraphs as string[]) || []).filter((_, i) => i !== index)
+    const updated = { ...about, storyParagraphs: paragraphs }
+    updateSetting("about_content", updated)
   }
 
   const renderSection = useCallback(() => {
@@ -128,6 +215,7 @@ export default function AdminSettings() {
                 <Plus className="w-4 h-4" /> Add Slide
               </button>
             </div>
+            {slides.length === 0 && <p className="text-gray-400 text-sm">No slides added yet.</p>}
             {slides.map((slide, index) => (
               <div key={index} className="bg-gray-50 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -177,7 +265,7 @@ export default function AdminSettings() {
       }
 
       case "site_info": {
-        const info = settings.site_info as Record<string, string> || {}
+        const info = (settings.site_info as Record<string, string>) || {}
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Site Information</h3>
@@ -197,7 +285,7 @@ export default function AdminSettings() {
       }
 
       case "contact_info": {
-        const info = settings.contact_info as Record<string, string> || {}
+        const info = (settings.contact_info as Record<string, string>) || {}
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Contact Information</h3>
@@ -213,14 +301,18 @@ export default function AdminSettings() {
             ))}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Business Hours</label>
-              <textarea rows={3} value={info.businessHours || ""} onChange={(e) => updateField("contact_info", "businessHours", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none" />
+              <textarea rows={3} value={info.businessHours || ""} onChange={(e) => updateField("contact_info", "businessHours", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none" placeholder={"Mon - Fri: 8AM - 6PM\nSat: 9AM - 2PM\nSun: Closed"} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Google Maps Embed URL</label>
+              <input type="url" value={info.mapEmbed || ""} onChange={(e) => updateField("contact_info", "mapEmbed", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" />
             </div>
           </div>
         )
       }
 
       case "social_links": {
-        const links = settings.social_links as Record<string, string> || {}
+        const links = (settings.social_links as Record<string, string>) || {}
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Social Media Links</h3>
@@ -235,27 +327,33 @@ export default function AdminSettings() {
       }
 
       case "calculator_settings": {
-        const calc = settings.calculator_settings as Record<string, string | number> || {}
+        const calc = (settings.calculator_settings as Record<string, string | number>) || {}
+        const currency = (calc.currency as string) || "$"
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Calculator Settings</h3>
-            {[
-              { field: "currency", label: "Currency Symbol" },
-              { field: "costPerKw", label: "Cost per kW ($)", type: "number" },
-              { field: "savingsRate", label: "Savings Rate (0-1)", type: "number" },
-              { field: "co2Factor", label: "CO2 Offset Factor", type: "number" },
-            ].map(({ field, label, type }) => (
-              <div key={field}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                <input type={type || "text"} value={calc[field] as string | number} onChange={(e) => updateField("calculator_settings", field, type === "number" ? Number(e.target.value) : e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" />
-              </div>
-            ))}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Currency Symbol</label>
+              <input type="text" value={calc.currency as string || "$"} onChange={(e) => updateField("calculator_settings", "currency", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cost per kW ({currency})</label>
+              <input type="number" value={calc.costPerKw as number || 2500} onChange={(e) => updateField("calculator_settings", "costPerKw", Number(e.target.value))} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Savings Rate (0-1)</label>
+              <input type="number" step="0.01" min="0" max="1" value={calc.savingsRate as number || 0.7} onChange={(e) => updateField("calculator_settings", "savingsRate", Number(e.target.value))} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">CO2 Offset Factor</label>
+              <input type="number" step="0.1" value={calc.co2Factor as number || 1.5} onChange={(e) => updateField("calculator_settings", "co2Factor", Number(e.target.value))} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" />
+            </div>
           </div>
         )
       }
 
       case "stats": {
-        const stats = settings.stats as Record<string, string> || {}
+        const stats = (settings.stats as Record<string, string>) || {}
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Stats Counters (Homepage)</h3>
@@ -274,17 +372,185 @@ export default function AdminSettings() {
         )
       }
 
+      case "footer_links": {
+        const links = (settings.footer_links as { services: FooterLinkItem[]; company: FooterLinkItem[] }) || { services: [], company: [] }
+        return (
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <button onClick={() => toggleFooterGroup("services")} className="flex items-center gap-2 font-semibold text-gray-900">
+                  {footerExpanded.services ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  Services Links
+                </button>
+                <button onClick={() => addFooterLink("services")} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-full text-sm hover:bg-emerald-700">
+                  <Plus className="w-3.5 h-3.5" /> Add Link
+                </button>
+              </div>
+              {footerExpanded.services && (
+                <div className="space-y-3 ml-2">
+                  {(links.services || []).length === 0 && <p className="text-gray-400 text-sm">No service links added.</p>}
+                  {(links.services || []).map((link, index) => (
+                    <div key={index} className="bg-gray-50 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-gray-500">Link {index + 1}</span>
+                        <button onClick={() => removeFooterLink("services", index)} className="p-1 hover:bg-red-50 rounded text-red-500">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                          <input type="text" value={link.label || ""} onChange={(e) => updateFooterLink("services", index, "label", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">URL</label>
+                          <input type="text" value={link.href || ""} onChange={(e) => updateFooterLink("services", index, "href", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <button onClick={() => toggleFooterGroup("company")} className="flex items-center gap-2 font-semibold text-gray-900">
+                  {footerExpanded.company ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  Company Links
+                </button>
+                <button onClick={() => addFooterLink("company")} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-full text-sm hover:bg-emerald-700">
+                  <Plus className="w-3.5 h-3.5" /> Add Link
+                </button>
+              </div>
+              {footerExpanded.company && (
+                <div className="space-y-3 ml-2">
+                  {(links.company || []).length === 0 && <p className="text-gray-400 text-sm">No company links added.</p>}
+                  {(links.company || []).map((link, index) => (
+                    <div key={index} className="bg-gray-50 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-gray-500">Link {index + 1}</span>
+                        <button onClick={() => removeFooterLink("company", index)} className="p-1 hover:bg-red-50 rounded text-red-500">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                          <input type="text" value={link.label || ""} onChange={(e) => updateFooterLink("company", index, "label", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">URL</label>
+                          <input type="text" value={link.href || ""} onChange={(e) => updateFooterLink("company", index, "href", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      }
+
+      case "about_content": {
+        const about = (settings.about_content as Record<string, unknown>) || {}
+        const values = (about.values as Array<{ icon: string; title: string; description: string }>) || []
+        const paragraphs = (about.storyParagraphs as string[]) || []
+        return (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">About Hero Section</h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Hero Title</label>
+                <input type="text" value={(about.heroTitle as string) || ""} onChange={(e) => updateField("about_content", "heroTitle", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Hero Description</label>
+                <textarea rows={3} value={(about.heroDescription as string) || ""} onChange={(e) => updateField("about_content", "heroDescription", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none" />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Our Story</h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Story Title</label>
+                <input type="text" value={(about.storyTitle as string) || ""} onChange={(e) => updateField("about_content", "storyTitle", e.target.value)} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-700">Paragraphs</label>
+                  <button onClick={addStoryParagraph} className="flex items-center gap-1 text-emerald-600 text-sm hover:underline">
+                    <Plus className="w-3.5 h-3.5" /> Add Paragraph
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {paragraphs.length === 0 && <p className="text-gray-400 text-sm">No paragraphs added. Default content will show.</p>}
+                  {paragraphs.map((p, index) => (
+                    <div key={index} className="flex gap-2">
+                      <textarea rows={2} value={p} onChange={(e) => updateStoryParagraph(index, e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm resize-none" />
+                      <button onClick={() => removeStoryParagraph(index)} className="p-2 hover:bg-red-50 rounded-lg text-red-500 self-start mt-1">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Core Values</h3>
+                <button onClick={addValue} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-full text-sm hover:bg-emerald-700">
+                  <Plus className="w-3.5 h-3.5" /> Add Value
+                </button>
+              </div>
+              <div className="space-y-3">
+                {values.length === 0 && <p className="text-gray-400 text-sm">No values added. Default values will show.</p>}
+                {values.map((val, index) => (
+                  <div key={index} className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-500">Value {index + 1}</span>
+                      <button onClick={() => removeValue(index)} className="p-1 hover:bg-red-50 rounded text-red-500">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Icon Name</label>
+                        <input type="text" value={val.icon || ""} onChange={(e) => updateValue(index, "icon", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm" placeholder="Shield, Award, Users, Leaf" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+                        <input type="text" value={val.title || ""} onChange={(e) => updateValue(index, "title", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm" />
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                      <textarea rows={2} value={val.description || ""} onChange={(e) => updateValue(index, "description", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm resize-none" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      }
+
       default:
         return <p className="text-gray-500">Select a section to edit</p>
     }
-  }, [activeSection, settings, heroExpanded])
+  }, [activeSection, settings, heroExpanded, footerExpanded])
 
   if (loading) return <div className="text-center py-12 text-gray-500">Loading settings...</div>
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Website Settings</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Website Settings</h2>
+          <p className="text-gray-500 text-sm mt-1">Changes will reflect on the site after saving</p>
+        </div>
         <button
           onClick={handleSave}
           disabled={saving}
